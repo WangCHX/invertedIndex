@@ -42,10 +42,10 @@ void addWord(string word, int docID) {
         wordDoc.push_back(temp);
     } else {
         int i = id->second;
-        if (wordDoc[i].back().first == docID) {
-            ++ wordDoc[i].back().second;
-        } else {
+        if (wordDoc[i].size() == 0 || wordDoc[i].back().first != docID) {
             wordDoc[i].push_back(make_pair(docID, 1));
+        } else {
+            ++ wordDoc[i].back().second;
         }
     }
 }
@@ -122,25 +122,21 @@ vector<pair<string, docNode>> parse(string dataFile, string indexFile) {
     return res;
 }
 
-void saveIndexFileSplitBySize(string filename, int start, int &end, int max_numbers) {
+void saveIndexFileSplitBySize(string filename) {
 	string f1 = filename + "d.gz", f2 = filename + "f.gz";
-    // We keep postings in compressed format on disk even during the index building operation.
 	gzFile fw1 = gzopen(f1.data(), "ab");
 	gzFile fw2 = gzopen(f2.data(), "ab");
 	if(fw1 == NULL || fw2 == NULL) return;
-	int pos = 0, l = (int)wordDoc.size(), i, file_numbers = 0;
-	for(i = max(start, 0) ; i < l; ++i) {
+	//int pos = 0;
+	for(int i = 0 ; i < (int)wordDoc.size(); ++i) {
 		int ll = (int)wordDoc[i].size();
 		//lexicon
-		int st = pos;
-		pos += ll;
+		//int st = pos;
+		//pos += ll;
 		//lexiconSet[i].file_name = filename;
-		lexiconSet[i].start = st;
+		lexiconSet[i].start = i;
 		lexiconSet[i].length = ll;
 		//lexiconSet[i].total = word_doc_cnt_total[i];
-		file_numbers += ll;
-		if(file_numbers > max_numbers)
-			break;
 		for(int j = 0; j < ll; ++j) {
 			gzprintf(fw1, "%d ", wordDoc[i][j].first);
 			gzprintf(fw2, "%d ", wordDoc[i][j].second);
@@ -150,7 +146,6 @@ void saveIndexFileSplitBySize(string filename, int start, int &end, int max_numb
 	}
 	gzclose(fw1);
 	gzclose(fw2);
-	end = i;
 }
 
 const string DOCINFOFILELOCATION = "/Users/apple/Developer/INDEX/docInfo.txt";
@@ -185,29 +180,41 @@ lexiconNode findLexiconByWord(string word) {
 
 const int PERINTEXFILESIZE = 2000000;
 const string INDEXFILELOCATION = "/Users/apple/Developer/INDEX/";
+
+void merge(){
+    
+}
 int main(int argc, char * argv[]){
     string NZ2_LOCATION = "/Users/apple/Developer/INDEX/nz2_merged/";
-    for (int i = 0;i < 83;i ++) {
-        stringstream ss;
-        ss << i;
-        string temp = ss.str();
-        string indexFile = NZ2_LOCATION + temp + "_index";
-        string dataFile = NZ2_LOCATION + temp + "_data";
-        vector<pair<string, docNode>> res = parse(dataFile, indexFile);
-        for (int i = 0;i < res.size();i ++) {
-            int docid = getDocID(res[i].second.url, res[i].second.d);
-            addWordSet(res[i].first, docid);
-        }
-    }
-    int end = -1;
-    lexiconSet.clear();
-    lexiconSet.resize(wordID.size());
-    for (int i = 0, j = 0; i < wordID.size(); j ++) {
+    string WHOLE_NZ_LOCATION = "/Users/apple/Developer/INDEX/nz_complete/";
+    for (int j = 0; j < 43; j ++) {
         stringstream ss;
         ss << j;
         string temp = ss.str();
-        saveIndexFileSplitBySize(INDEXFILELOCATION + temp, i, end, PERINTEXFILESIZE);
-        i = end;
+        for (int k = 0; k < wordDoc.size(); k ++) {
+            wordDoc[k].clear();
+        }
+        int m;
+        if (j == 42) {
+            m = 80;
+        } else {
+            m = 100;
+        }
+        for (int i = 100 * j;i < 100 * j + m;i ++) {
+            stringstream ss;
+            ss << i;
+            string t = ss.str();
+            string indexFile = WHOLE_NZ_LOCATION + temp + "/" + t + "_index";
+            string dataFile = WHOLE_NZ_LOCATION + temp + "/" + t + "_data";
+            vector<pair<string, docNode>> res = parse(dataFile, indexFile);
+            for (int i = 0;i < res.size();i ++) {
+                int docid = getDocID(res[i].second.url, res[i].second.d);
+                addWordSet(res[i].first, docid);
+            }
+        }
+        lexiconSet.clear();
+        lexiconSet.resize(wordID.size());
+        saveIndexFileSplitBySize(INDEXFILELOCATION + temp);
     }
     saveDocInfoFile();
     saveLexInfoFile();

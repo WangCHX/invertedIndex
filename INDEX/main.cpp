@@ -69,6 +69,7 @@ struct docNode {
 
 unordered_map<string, int> docID;
 vector<docNode> docs;
+
 int getDocID(string url, int size){
     if (docID.find(url) == docID.end()) {
         docID[url] = (int)docs.size();
@@ -121,13 +122,13 @@ vector<pair<string, docNode>> parse(string dataFile, string indexFile) {
     return res;
 }
 
-void save_index_file_split_by_size(string filename, int start, int &end, int max_numbers) {
+void saveIndexFileSplitBySize(string filename, int start, int &end, int max_numbers) {
 	string f1 = filename + "d.gz", f2 = filename + "f.gz";
     // We keep postings in compressed format on disk even during the index building operation.
 	gzFile fw1 = gzopen(f1.data(), "ab");
 	gzFile fw2 = gzopen(f2.data(), "ab");
 	if(fw1 == NULL || fw2 == NULL) return;
-	int pos = 0, l = (int)wordDoc.size(), i, file_numbers = 0;;
+	int pos = 0, l = (int)wordDoc.size(), i, file_numbers = 0;
 	for(i = max(start, 0) ; i < l; ++i) {
 		int ll = (int)wordDoc[i].size();
 		//lexicon
@@ -174,6 +175,13 @@ void saveLexInfoFile(){
     fclose(fw);
 }
 
+lexiconNode findLexiconByWord(string word) {
+    if (wordID.find(word) != wordID.end()) {
+        return lexiconSet[wordID[word]];
+    } else {
+        return lexiconNode();
+    }
+}
 
 const int PERINTEXFILESIZE = 2000000;
 const string INDEXFILELOCATION = "/Users/apple/Developer/INDEX/";
@@ -198,7 +206,7 @@ int main(int argc, char * argv[]){
         stringstream ss;
         ss << j;
         string temp = ss.str();
-        save_index_file_split_by_size(INDEXFILELOCATION + temp, i, end, PERINTEXFILESIZE);
+        saveIndexFileSplitBySize(INDEXFILELOCATION + temp, i, end, PERINTEXFILESIZE);
         i = end;
     }
     saveDocInfoFile();

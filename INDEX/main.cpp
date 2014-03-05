@@ -30,8 +30,8 @@ struct lexiconNode{
 unordered_map<string, int> wordID;//wordid
 vector<vector<pair<int, int>>> wordDoc;//every word (docID, frequncy)
 vector<lexiconNode> lexiconSet;
-vector<string> urlTable;
-vector<vector<int> > invertedIndex;
+//vector<string> urlTable;
+//vector<vector<int> > invertedIndex;
 
 void addWord(string word, int docID) {
     auto id = wordID.find(word);
@@ -187,7 +187,7 @@ void merge(){
 int main(int argc, char * argv[]){
     string NZ2_LOCATION = "/Users/apple/Developer/INDEX/nz2_merged/";
     string WHOLE_NZ_LOCATION = "/Users/apple/Developer/INDEX/nz_complete/";
-    for (int j = 0; j < 43; j ++) {
+    for (int j = 0; j < 42; j ++) {
         stringstream ss;
         ss << j;
         string temp = ss.str();
@@ -195,7 +195,7 @@ int main(int argc, char * argv[]){
             wordDoc[k].clear();
         }
         int m;
-        if (j == 42) {
+        if (j == 41) {
             m = 80;
         } else {
             m = 100;
@@ -215,8 +215,10 @@ int main(int argc, char * argv[]){
         lexiconSet.clear();
         lexiconSet.resize(wordID.size());
         saveIndexFileSplitBySize(INDEXFILELOCATION + temp);
+        saveLexInfoFile();
     }
+    merge();
     saveDocInfoFile();
-    saveLexInfoFile();
+    //saveLexInfoFile();
     return 0;
 }

@@ -17,45 +17,65 @@
 #include <errno.h>
 #include <cstdio>
 #include "parser.h"
+#include "StreamBuffer.h"
 using namespace std;
 
-
 struct lexiconNode{
-    int start;
-    int length;
-    lexiconNode(int a,int b):start(a),length(b){}
-    lexiconNode():start(-1),length(-1){}
+    int wordid;
+    int docid;
+    int position;
+    lexiconNode(){}
+    void serialize(StreamBuffer &stream )
+	{
+		stream.write(&wordid);
+		stream.write(&docid);
+		stream.write(&position);
+	}
+	void deserialize( StreamBuffer &stream  )
+	{
+		stream.read(&wordid);
+		stream.read(&docid);
+		stream.read(&position);
+        
+	}
+    
+	friend StreamBuffer& operator<<(StreamBuffer &stream, lexiconNode& obj)
+	{
+		obj.deserialize(stream);
+        return stream;
+	}
+	friend StreamBuffer& operator>>(StreamBuffer &stream, lexiconNode& obj)
+	{
+        obj.serialize(stream);
+        return stream;
+	}
 };
 
+StreamBuffer *buffer;
 unordered_map<string, int> wordID;//wordid
-vector<vector<pair<int, int>>> wordDoc;//every word (docID, frequncy)
-vector<lexiconNode> lexiconSet;
-//vector<string> urlTable;
-//vector<vector<int> > invertedIndex;
+//vector<lexiconNode> lexiconSet;
 
-void addWord(string word, int docID) {
-    auto id = wordID.find(word);
-    if (id == wordID.end()) {
-        wordID[word] = (int)wordDoc.size();
-        vector<pair<int , int>> temp;
-        temp.push_back(make_pair(docID, 1));
-        wordDoc.push_back(temp);
+int wordid = 0;
+int getWordId(string word){
+    if (wordID.find(word) == wordID.end()) {
+        wordID[word] = wordid;
+        return wordid ++;
     } else {
-        int i = id->second;
-        if (wordDoc[i].size() == 0 || wordDoc[i].back().first != docID) {
-            wordDoc[i].push_back(make_pair(docID, 1));
-        } else {
-            ++ wordDoc[i].back().second;
-        }
+        return wordID[word];
     }
 }
 
-void addWordSet(string wordSet, int docID){
+void addWordSet(string wordSet, int docID,int len){
     stringstream ss;
     ss << wordSet;
     string temp;
+    int pos = 0;
     while (ss >> temp) {
-        addWord(temp, docID);
+        lexiconNode newItem;
+        newItem.docid = docID;
+        newItem.wordid = getWordId(temp);
+        newItem.position = pos ++;
+        (*buffer) >> newItem;
         ss >> temp;
     }
 }
@@ -82,20 +102,19 @@ int getDocID(string url, int size){
 
 
 const int INDEX_CHUNK = 409600;
-vector<pair<string, docNode>> parse(string dataFile, string indexFile) {
-    vector<pair<string, docNode>> res;
+void parse(string dataFile, string indexFile) {
     gzFile cData, cIndex;
     cData = gzopen(dataFile.data(), "rb");
     if (! cData) {
         fprintf (stderr, "gzopen '%s' failed: %s.\n", dataFile.data(),
                  strerror (errno));
-        return res;
+        return;
     }
     cIndex = gzopen(indexFile.data(), "rb");
     if (! cIndex) {
         fprintf (stderr, "gzopen '%s' failed: %s.\n", indexFile.data(),
                  strerror (errno));
-        return res;
+        return;
     }
     char indexBuffer[INDEX_CHUNK];
     while (gzgets(cIndex, indexBuffer, INDEX_CHUNK)) {
@@ -103,50 +122,26 @@ vector<pair<string, docNode>> parse(string dataFile, string indexFile) {
         int size = 0;
         int i, j, m;
         sscanf(indexBuffer, "%s %d %d %d %s %d %s", url, &i, &j, &size, s1, &m, s2);
+        int docid = getDocID(url, size);
         char Data[size];
         gzread(cData, Data, size);
         char *wordInDoc = (char *)malloc(2 * size + 1);
         parser(url, Data, wordInDoc, 2 * size + 1);
-        int t = 0;
-        for(int i = 0, j = (int)strlen(wordInDoc); i < j; i ++) {
+        //int t = 0;
+        /*for(int i = 0, j = (int)strlen(wordInDoc); i < j; i ++) {
         	if(wordInDoc[i] == '\n') {
 				t ++;
             }
-        }
-        res.push_back(make_pair(string(wordInDoc) , docNode(url, t)));
+        }*/
+        //res.push_back(make_pair(string(wordInDoc) , docNode(url, t)));
+        addWordSet(string(wordInDoc), docid, 2 * size + 1);
         free(wordInDoc);
     }
     
     gzclose(cData);
     gzclose(cIndex);
-    return res;
 }
 
-void saveIndexFileSplitBySize(string filename) {
-	string f1 = filename + "d.gz", f2 = filename + "f.gz";
-	gzFile fw1 = gzopen(f1.data(), "ab");
-	gzFile fw2 = gzopen(f2.data(), "ab");
-	if(fw1 == NULL || fw2 == NULL) return;
-	//int pos = 0;
-	for(int i = 0 ; i < (int)wordDoc.size(); ++i) {
-		int ll = (int)wordDoc[i].size();
-		//lexicon
-		//int st = pos;
-		//pos += ll;
-		//lexiconSet[i].file_name = filename;
-		lexiconSet[i].start = i;
-		lexiconSet[i].length = ll;
-		//lexiconSet[i].total = word_doc_cnt_total[i];
-		for(int j = 0; j < ll; ++j) {
-			gzprintf(fw1, "%d ", wordDoc[i][j].first);
-			gzprintf(fw2, "%d ", wordDoc[i][j].second);
-		}
-		gzprintf(fw1, "\n");
-		gzprintf(fw2, "\n");
-	}
-	gzclose(fw1);
-	gzclose(fw2);
-}
 
 const string DOCINFOFILELOCATION = "/Users/apple/Developer/INDEX/docInfo.txt";
 void saveDocInfoFile(){
@@ -159,66 +154,57 @@ void saveDocInfoFile(){
 	fclose(fw);
 }
 
-const string LEXINFOFILELOCATION = "/Users/apple/Developer/INDEX/lexInfo.txt";
-void saveLexInfoFile(){
-    FILE *fw = fopen(LEXINFOFILELOCATION.data(), "w");
+const string LEXINFOFILELOCATION = "/Users/apple/Developer/INDEX/lexInfo";
+void saveLexInfoFile(string filelocation){
+    FILE *fw = fopen(filelocation.data(), "w");
     if (fw == NULL) return;
     fprintf(fw, "%d\n", (int)wordID.size());
     for (auto it = wordID.begin(); it != wordID.end(); ++ it) {
-        fprintf(fw, "%s %d %d %d\n", it->first.data(), it->second, lexiconSet[it->second].start, lexiconSet[it->second].length);
+        fprintf(fw, "%s %d\n", it->first.data(), it->second);
     }
     fclose(fw);
 }
 
-lexiconNode findLexiconByWord(string word) {
-    if (wordID.find(word) != wordID.end()) {
-        return lexiconSet[wordID[word]];
-    } else {
-        return lexiconNode();
-    }
-}
 
 const int PERINTEXFILESIZE = 2000000;
 const string INDEXFILELOCATION = "/Users/apple/Developer/INDEX/";
 
-void merge(){
-    
-}
 int main(int argc, char * argv[]){
     string NZ2_LOCATION = "/Users/apple/Developer/INDEX/nz2_merged/";
     string WHOLE_NZ_LOCATION = "/Users/apple/Developer/INDEX/nz_complete/";
-    for (int j = 0; j < 42; j ++) {
+    buffer = new StreamBuffer(12*1024*1024/4);
+    buffer->setfilename("/Users/apple/Developer/INDEX/intermediate/posting");
+    /*for (int j = 0; j < 5; j ++) {
         stringstream ss;
         ss << j;
         string temp = ss.str();
-        for (int k = 0; k < wordDoc.size(); k ++) {
-            wordDoc[k].clear();
-        }
         int m;
-        if (j == 41) {
-            m = 80;
+        if (j == 4) {
+            m = 180;
         } else {
-            m = 100;
+            m = 1000;
         }
-        for (int i = 100 * j;i < 100 * j + m;i ++) {
+        for (int i = 1000 * j;i < 1000 * j + m;i ++) {
             stringstream ss;
             ss << i;
             string t = ss.str();
             string indexFile = WHOLE_NZ_LOCATION + temp + "/" + t + "_index";
             string dataFile = WHOLE_NZ_LOCATION + temp + "/" + t + "_data";
-            vector<pair<string, docNode>> res = parse(dataFile, indexFile);
-            for (int i = 0;i < res.size();i ++) {
-                int docid = getDocID(res[i].second.url, res[i].second.d);
-                addWordSet(res[i].first, docid);
-            }
+            parse(dataFile, indexFile);
         }
-        lexiconSet.clear();
-        lexiconSet.resize(wordID.size());
-        saveIndexFileSplitBySize(INDEXFILELOCATION + temp);
-        saveLexInfoFile();
+        //lexiconSet.resize(wordID.size());
+        //saveIndexFileSplitBySize(INDEXFILELOCATION + temp);
+        //saveLexInfoFile(LEXINFOFILELOCATION + temp + ".txt");
+    }*/
+    for (int i = 0;i < 83;i ++) {
+        stringstream ss;
+        ss << i;
+        string temp = ss.str();
+        string indexFile = NZ2_LOCATION + temp + "_index";
+        string dataFile = NZ2_LOCATION + temp + "_data";
+        parse(dataFile,indexFile);
     }
-    merge();
     saveDocInfoFile();
-    //saveLexInfoFile();
+    saveLexInfoFile(LEXINFOFILELOCATION + ".txt");
     return 0;
 }

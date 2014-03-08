@@ -175,7 +175,6 @@ int main(int argc, char * argv[]){
     string WHOLE_NZ_LOCATION = "/Users/apple/Developer/INDEX/nz_complete/";
     b = new StreamBuffer(12*1024*1024/4);
     b->setfilename("/Users/apple/Developer/INDEX/intermediate/posting");
-    b->setpostingsize(12);
     b->set_sort(true);
     /*for (int j = 0; j < 5; j ++) {
         stringstream ss;

@@ -18,6 +18,7 @@
 #include <cstdio>
 #include "parser.h"
 #include "StreamBuffer.h"
+#include "merge.h"
 using namespace std;
 
 struct lexiconNode{
@@ -51,7 +52,7 @@ struct lexiconNode{
 	}
 };
 
-StreamBuffer *buffer;
+StreamBuffer *b;
 unordered_map<string, int> wordID;//wordid
 //vector<lexiconNode> lexiconSet;
 
@@ -75,7 +76,7 @@ void addWordSet(string wordSet, int docID,int len){
         newItem.docid = docID;
         newItem.wordid = getWordId(temp);
         newItem.position = pos ++;
-        (*buffer) >> newItem;
+        (*b) >> newItem;
         ss >> temp;
     }
 }
@@ -172,8 +173,10 @@ const string INDEXFILELOCATION = "/Users/apple/Developer/INDEX/";
 int main(int argc, char * argv[]){
     string NZ2_LOCATION = "/Users/apple/Developer/INDEX/nz2_merged/";
     string WHOLE_NZ_LOCATION = "/Users/apple/Developer/INDEX/nz_complete/";
-    buffer = new StreamBuffer(12*1024*1024/4);
-    buffer->setfilename("/Users/apple/Developer/INDEX/intermediate/posting");
+    b = new StreamBuffer(12*1024*1024/4);
+    b->setfilename("/Users/apple/Developer/INDEX/intermediate/posting");
+    b->setpostingsize(12);
+    b->set_sort(true);
     /*for (int j = 0; j < 5; j ++) {
         stringstream ss;
         ss << j;
@@ -206,5 +209,6 @@ int main(int argc, char * argv[]){
     }
     saveDocInfoFile();
     saveLexInfoFile(LEXINFOFILELOCATION + ".txt");
+    doMerge();
     return 0;
 }

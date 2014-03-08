@@ -150,6 +150,7 @@ bool StreamBuffer::savetofile(){
             sort(postingsize, offset);
         
         file.write(mybuffer,offset);
+        //file << mybuffer;
         file.close();
         filenum++;
 	}

@@ -11,6 +11,7 @@
 		18A235BD18C531F9005D18E7 /* INDEX.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 18A235BC18C531F9005D18E7 /* INDEX.1 */; };
 		18A235C518C53210005D18E7 /* parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18A235C318C53210005D18E7 /* parser.cpp */; };
 		18A235C718C532CC005D18E7 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A235C618C532CC005D18E7 /* libz.dylib */; };
+		18B830B118CA1BAF00C20FA0 /* StreamBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18B830AF18CA1BAF00C20FA0 /* StreamBuffer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,12 +28,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1837B3A418CBBE78007FC4BE /* heap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = heap.h; sourceTree = "<group>"; };
+		1860826818CBBEE900743DBF /* vbyte.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vbyte.h; sourceTree = "<group>"; };
+		1860826918CBC52200743DBF /* merge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = merge.h; sourceTree = "<group>"; };
 		18A235B718C531F9005D18E7 /* INDEX */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = INDEX; sourceTree = BUILT_PRODUCTS_DIR; };
 		18A235BA18C531F9005D18E7 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		18A235BC18C531F9005D18E7 /* INDEX.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = INDEX.1; sourceTree = "<group>"; };
 		18A235C318C53210005D18E7 /* parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parser.cpp; sourceTree = "<group>"; };
 		18A235C418C53210005D18E7 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parser.h; sourceTree = "<group>"; };
 		18A235C618C532CC005D18E7 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		18B830AF18CA1BAF00C20FA0 /* StreamBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StreamBuffer.cpp; sourceTree = "<group>"; };
+		18B830B018CA1BAF00C20FA0 /* StreamBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamBuffer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +77,11 @@
 				18A235BC18C531F9005D18E7 /* INDEX.1 */,
 				18A235C318C53210005D18E7 /* parser.cpp */,
 				18A235C418C53210005D18E7 /* parser.h */,
+				18B830AF18CA1BAF00C20FA0 /* StreamBuffer.cpp */,
+				18B830B018CA1BAF00C20FA0 /* StreamBuffer.h */,
+				1837B3A418CBBE78007FC4BE /* heap.h */,
+				1860826818CBBEE900743DBF /* vbyte.h */,
+				1860826918CBC52200743DBF /* merge.h */,
 			);
 			path = INDEX;
 			sourceTree = "<group>";
@@ -127,6 +138,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				18A235C518C53210005D18E7 /* parser.cpp in Sources */,
+				18B830B118CA1BAF00C20FA0 /* StreamBuffer.cpp in Sources */,
 				18A235BB18C531F9005D18E7 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -235,6 +247,7 @@
 				18A235C218C531F9005D18E7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
